@@ -89,6 +89,7 @@ parse_args() {
 normalize_version() {
     VER="${1:-}"
     VER="${VER#v}"
+    VER="${VER#Release}"
     VER="${VER%%-*}"
     printf '%s' "$VER"
 }
@@ -162,6 +163,11 @@ print_result() {
         return 0
     fi
 
+    if [ "$INSTALLED" = "installed" ]; then
+        printf '%s\n' "  状态: 已安装，无法比较版本"
+        return 0
+    fi
+
     INSTALLED_NORM="$(normalize_version "$INSTALLED")"
     LATEST_NORM="$(normalize_version "$LATEST")"
 
@@ -178,8 +184,16 @@ get_installed_opkg_version() {
 }
 
 get_installed_apk_version() {
-    PKG="$1"
-    apk info -a "$PKG" 2>/dev/null | sed -n 's/^version: //p' | head -n1 || true
+    for PKG in "$@"; do
+        apk info -e "$PKG" >/dev/null 2>&1 || continue
+
+        VER="$(apk info -v "$PKG" 2>/dev/null | sed -n 's/^'"$PKG"'-//p' | head -n1 || true)"
+        [ -n "$VER" ] || VER="$(apk info -a "$PKG" 2>/dev/null | sed -n 's/^[Vv]ersion:[[:space:]]*//p' | head -n1 || true)"
+        printf '%s' "${VER:-installed}"
+        return 0
+    done
+
+    printf ''
 }
 
 check_openclash() {
@@ -219,7 +233,7 @@ check_smartdns() {
     if [ "$PKG_MGR" = "opkg" ]; then
         INSTALLED="$(get_installed_opkg_version smartdns)"
     else
-        INSTALLED="$(get_installed_apk_version smartdns)"
+        INSTALLED="$(get_installed_apk_version luci-app-smartdns smartdns)"
     fi
 
     LATEST="$(fetch_latest_tag_jsonfilter smartdns "$SMARTDNS_API" || true)"
@@ -230,7 +244,7 @@ check_mosdns() {
     if [ "$PKG_MGR" = "opkg" ]; then
         INSTALLED="$(get_installed_opkg_version mosdns)"
     else
-        INSTALLED="$(get_installed_apk_version mosdns)"
+        INSTALLED="$(get_installed_apk_version luci-app-mosdns mosdns)"
     fi
 
     LATEST="$(fetch_latest_tag_jsonfilter mosdns "$MOSDNS_API" || true)"
@@ -241,7 +255,7 @@ check_nikki() {
     if [ "$PKG_MGR" = "opkg" ]; then
         INSTALLED="$(get_installed_opkg_version luci-app-nikki)"
     else
-        INSTALLED="$(get_installed_apk_version luci-app-nikki)"
+        INSTALLED="$(get_installed_apk_version luci-app-nikki nikki)"
     fi
 
     LATEST="$(fetch_latest_tag_jsonfilter nikki "$NIKKI_REPO_API" || true)"

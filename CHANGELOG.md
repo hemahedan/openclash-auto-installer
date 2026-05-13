@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.3
+
+- 修复 `check-updates.sh` 在 OpenWrt 25.12+ / `apk` 环境下误判已安装插件为 `not installed` 的问题：改用 `apk info -e` 判断安装状态，并用 `apk info -v` 读取版本。
+- SmartDNS / MosDNS / Nikki 检测增加 LuCI 包与核心包的候选包名兜底，避免 LuCI 菜单已存在但版本检测为空。
+
 ## v1.2.2
 
 - `passwall.sh` / `passwall2.sh` 支持 OpenWrt 25.12+ / `apk` 环境：自动匹配上游 `packages-25.12` 目录并下载 `.apk` 安装包
