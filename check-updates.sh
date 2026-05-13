@@ -187,7 +187,9 @@ get_installed_apk_version() {
     for PKG in "$@"; do
         apk info -e "$PKG" >/dev/null 2>&1 || continue
 
-        VER="$(apk info -v "$PKG" 2>/dev/null | sed -n 's/^'"$PKG"'-//p' | head -n1 || true)"
+        VER="$(apk list --installed --manifest "$PKG" 2>/dev/null | awk -v pkg="$PKG" '$1 == pkg {print $2; exit}' || true)"
+        [ -n "$VER" ] || VER="$(apk list --installed "$PKG" 2>/dev/null | sed -n 's/^'"$PKG"'-\([^[:space:]]*\).*/\1/p' | head -n1 || true)"
+        [ -n "$VER" ] || VER="$(apk info -v "$PKG" 2>/dev/null | sed -n 's/^'"$PKG"'-\([^[:space:]]*\).*/\1/p' | head -n1 || true)"
         [ -n "$VER" ] || VER="$(apk info -a "$PKG" 2>/dev/null | sed -n 's/^[Vv]ersion:[[:space:]]*//p' | head -n1 || true)"
         printf '%s' "${VER:-installed}"
         return 0
