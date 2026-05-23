@@ -127,7 +127,8 @@ normalize_release_for_passwall2() {
         25.*:opkg|24.*:*) printf '24.10' ;;
         23.05*:opkg|23.0*:opkg) printf '23.05' ;;
         22.03*:opkg|22.0*:opkg) printf '22.03' ;;
-        *SNAPSHOT*) printf 'snapshots' ;;
+        *SNAPSHOT*:opkg) printf '24.10' ;;
+        *SNAPSHOT*:apk) printf 'snapshots' ;;
         *) printf '' ;;
     esac
 }
@@ -150,7 +151,14 @@ log "Package manager: $PKG_MGR"
 [ -n "$TARGET_NAME" ] && log "Target: $TARGET_NAME"
 log "Package dir: $PACKAGE_DIR"
 if [ "$SUPPORTED_RELEASE" != "$REL_RAW" ]; then
-    warn "当前系统版本 ${REL_RAW} 将按兼容目录 ${SUPPORTED_RELEASE} 匹配 PassWall2 软件源。"
+    case "$REL_RAW:$PKG_MGR" in
+        *SNAPSHOT*:opkg)
+            warn "当前系统为 SNAPSHOT + opkg（如 ImmortalWRT SNAPSHOT），SourceForge snapshots 目录仅含元数据索引而无实际 .ipk 文件，已自动回退到 releases/packages-24.10 目录安装。"
+            ;;
+        *)
+            warn "当前系统版本 ${REL_RAW} 将按兼容目录 ${SUPPORTED_RELEASE} 匹配 PassWall2 软件源。"
+            ;;
+    esac
 fi
 if [ "$PKG_MGR" = "apk" ]; then
     warn "检测到 OpenWrt 25.12+ apk 环境，将尝试安装上游 .apk 包；若上游尚未发布当前架构构建，会明确失败。"
