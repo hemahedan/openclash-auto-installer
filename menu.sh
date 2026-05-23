@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="slobys/openclash-auto-installer"
+REPO="hemahedan/openclash-auto-installer"  # Fork 用户请将此改为自己的 GitHub 仓库，如：your-username/openclash-auto-installer
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
 RESOLVED_BASE_URL=""
